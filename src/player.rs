@@ -7,11 +7,14 @@ use crate::{
         PLAYER_SPRITE_SIZE,
         PLAYER_SPRITE_SCALE,
         FPS_TARGET,
-        BASE_SPEED, PLAYER_LASER_SPRITE_SCALE,
+        PLAYER_BASE_SPEED,
+        BULLET_BASE_SPEED,
+        PLAYER_LASER_SPRITE_SCALE,
     },
     components::{
         Player,
-        Velocity
+        Bullet,
+        Velocity,
     }
 };
 use bevy::prelude::*;
@@ -25,6 +28,7 @@ impl Plugin for PlayerPlugin {
                 player_spawn_system
             )
             .add_system(player_movement_system)
+            .add_system(bullet_movement_system)
             .add_system(player_keyboard_event_system)
             .add_system(player_fire_system);
     }
@@ -95,19 +99,22 @@ fn player_fire_system(
     if let Ok(trans) = query.get_single() {
         if kb.just_pressed(KeyCode::Space) {
             let (x, y) = (trans.translation.x, trans.translation.y);
-            commands.spawn_bundle(SpriteBundle {
-                texture: game_textures.player_laser.clone(),
-                transform: Transform {
-                    translation: Vec3::new(x, y, 0.),
-                    scale: Vec3::new(
-                        PLAYER_LASER_SPRITE_SCALE,
-                        PLAYER_LASER_SPRITE_SCALE + 0.05,
-                        1.
-                    ),
+            commands
+                .spawn_bundle(SpriteBundle {
+                    texture: game_textures.player_laser.clone(),
+                    transform: Transform {
+                        translation: Vec3::new(x, y + 20., 0.),
+                        scale: Vec3::new(
+                            PLAYER_LASER_SPRITE_SCALE,
+                            PLAYER_LASER_SPRITE_SCALE + 0.1,
+                            1.
+                        ),
+                        ..default()
+                    },
                     ..default()
-                },
-                ..default()
-            });
+                })
+                .insert(Velocity {x: 0., y: 1.})
+                .insert(Bullet);
         }
     }
 }
@@ -118,7 +125,28 @@ fn player_movement_system(
 ) {
     for (vel, mut transf) in query.iter_mut() {
         let transl = &mut transf.translation;
-        transl.x = (transl.x + (vel.x * FPS_TARGET * BASE_SPEED)).min(640.).max(-640.);
-        transl.y = (transl.y + (vel.y * FPS_TARGET * BASE_SPEED)).min(-175.).max(-wsize.h/2. + PLAYER_SPRITE_SIZE.1 / 2. * PLAYER_SPRITE_SCALE + 5.);
+        transl.x = (transl.x + (vel.x * FPS_TARGET * PLAYER_BASE_SPEED)).min(640.).max(-640.);
+        transl.y = (transl.y + (vel.y * FPS_TARGET * PLAYER_BASE_SPEED)).min(-175.).max(-wsize.h/2. + PLAYER_SPRITE_SIZE.1 / 2. * PLAYER_SPRITE_SCALE + 5.);
+    }
+}
+
+fn bullet_movement_system(
+    mut commands: Commands,
+    mut query: Query<(Entity, &Velocity, &mut Transform), With<Bullet>>,
+    wsize: Res<WinSize>
+) {
+    for (entity, vel, mut transf) in query.iter_mut() {
+        let transl = &mut transf.translation;
+        transl.x += vel.x * FPS_TARGET * BULLET_BASE_SPEED;
+        transl.y += vel.y * FPS_TARGET * BULLET_BASE_SPEED;
+
+        const M: f32 = 10.;
+        if transl.y > wsize.h / 2. + M
+        || transl.y < -wsize.h / 2. - M
+        || transl.x > wsize.w / 2. + M
+        || transl.x < -wsize.w / 2. - M
+        {
+            commands.entity(entity).despawn();
+        }
     }
 }

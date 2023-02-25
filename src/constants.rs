@@ -7,4 +7,5 @@ pub const PLAYER_LASER_SPRITE_SIZE: (f32, f32) = (78., 214.);
 pub const PLAYER_LASER_SPRITE_SCALE: f32 = 0.2;
 
 pub const FPS_TARGET: f32 = 1./60.;
-pub const BASE_SPEED: f32 = 500.;
+pub const PLAYER_BASE_SPEED: f32 = 500.;
+pub const BULLET_BASE_SPEED: f32 = 500.;
