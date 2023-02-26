@@ -7,9 +7,11 @@ use bevy::winit::WinitWindows;
 use winit::window::Icon;
 
 mod player;
+mod enemy;
 mod constants;
 mod components;
 mod resources;
+mod background;
 
 use constants::*;
 use resources::*;
@@ -25,6 +27,7 @@ fn main() {
             ..default()
         })
         .add_plugins(DefaultPlugins)
+        .add_plugin(background::BackgroundPlugin)
         .add_plugin(player::PlayerPlugin)
         .add_startup_system(setup_system)
         .run();
@@ -57,5 +60,9 @@ fn setup_system(
     commands.insert_resource(GameTextures {
         player: asset_server.load(PLAYER_SPRITE_PATH),
         player_laser: asset_server.load(PLAYER_LASER_SPRITE_PATH),
+        enemy1: asset_server.load(ENEMY1_SPRITE_PATH),
+        enemy2: asset_server.load(ENEMY2_SPRITE_PATH),
+        enemy_laser: asset_server.load(ENEMY_LASER_SPRITE_PATH),
+        background: asset_server.load(BACKGROUND_SPRITE_PATH)
     });
 }

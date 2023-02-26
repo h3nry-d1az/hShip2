@@ -9,7 +9,7 @@ use crate::{
         FPS_TARGET,
         PLAYER_BASE_SPEED,
         BULLET_BASE_SPEED,
-        PLAYER_LASER_SPRITE_SCALE,
+        LASER_SPRITE_SCALE,
     },
     components::{
         Player,
@@ -103,10 +103,10 @@ fn player_fire_system(
                 .spawn_bundle(SpriteBundle {
                     texture: game_textures.player_laser.clone(),
                     transform: Transform {
-                        translation: Vec3::new(x, y + 20., 0.),
+                        translation: Vec3::new(x, y + 20., 1.),
                         scale: Vec3::new(
-                            PLAYER_LASER_SPRITE_SCALE,
-                            PLAYER_LASER_SPRITE_SCALE + 0.1,
+                            LASER_SPRITE_SCALE,
+                            LASER_SPRITE_SCALE + 0.1,
                             1.
                         ),
                         ..default()

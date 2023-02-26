@@ -8,6 +8,7 @@ pub struct Velocity {
 
 #[derive(Component)]
 pub struct Player;
-
 #[derive(Component)]
 pub struct Bullet;
+#[derive(Component)]
+pub struct Background;
