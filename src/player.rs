@@ -10,11 +10,14 @@ use crate::{
         PLAYER_BASE_SPEED,
         BULLET_BASE_SPEED,
         LASER_SPRITE_SCALE,
+        LASER_SPRITE_SIZE
     },
     components::{
         Player,
         Bullet,
         Velocity,
+        FromPlayer,
+        SpriteSize,
     }
 };
 use bevy::prelude::*;
@@ -60,6 +63,7 @@ fn player_spawn_system(
             ..default()
         })
         .insert(Player)
+        .insert(SpriteSize::from(PLAYER_SPRITE_SIZE))
         .insert(Velocity {x: 0., y: 0.});
 }
 
@@ -114,7 +118,9 @@ fn player_fire_system(
                     ..default()
                 })
                 .insert(Velocity {x: 0., y: 1.})
-                .insert(Bullet);
+                .insert(Bullet)
+                .insert(FromPlayer)
+                .insert(SpriteSize::from(LASER_SPRITE_SIZE));
         }
     }
 }

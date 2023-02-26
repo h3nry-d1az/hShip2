@@ -11,5 +11,8 @@ pub struct GameTextures {
     pub enemy1: Handle<Image>,
     pub enemy2: Handle<Image>,
     pub enemy_laser: Handle<Image>,
-    pub background: Handle<Image>
+    pub background: Handle<Image>,
+    pub explosion: Handle<TextureAtlas>
 }
+
+pub struct EnemyCount(pub u32);

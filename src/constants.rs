@@ -7,10 +7,15 @@ pub const ENEMY_LASER_SPRITE_PATH: &str = "images/img_enemy_laser.png";
 pub const LASER_SPRITE_SIZE: (f32, f32) = (78., 214.);
 pub const LASER_SPRITE_SCALE: f32 = 0.2;
 
-pub const ENEMY1_SPRITE_PATH: &str = "images/img_enemy1.png";
-pub const ENEMY2_SPRITE_PATH: &str = "images/img_enemy2.png";
+pub const ENEMY1_SPRITE_PATH: &str = "images/img_enemy_1.png";
+pub const ENEMY2_SPRITE_PATH: &str = "images/img_enemy_2.png";
 pub const ENEMY_SPRITE_SIZE: (f32, f32) = (168., 168.);
-pub const ENEMY_SPRITE_SCALE: f32 = 0.6;
+pub const ENEMY_SPRITE_SCALE: f32 = 0.4;
+pub const MAX_ENEMIES_ON_STAGE: u32 = 7;
+
+pub const EXPLOSION_SPRITESHEET_PATH: &str = "images/img_explosion.png";
+pub const EXPLOSION_SPRITESHEET_SCALE: f32 = 0.4;
+pub const EXPLOSION_LENGTH: usize = 3;
 
 pub const BACKGROUND_SPRITE_PATH: &str = "images/img_background.png";
 pub const BACKGROUND_SPRITE_SIZE: (f32, f32) = (862., 352.);
