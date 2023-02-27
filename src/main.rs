@@ -39,6 +39,7 @@ fn main() {
         .add_plugin(explosion::ExplosionPlugin)
         .add_startup_system(setup_system)
         .add_system(player_laser_hit_enemy_system)
+        .add_system(enemy_laser_hit_player_system)
         .run();
 }
 
@@ -113,10 +114,42 @@ fn player_laser_hit_enemy_system(
             if let Some(_) = collision {
                 commands.entity(en_entity).despawn();
                 despawned_entities.insert(en_entity);
+                enemy_count.0 -= 1;
+
                 commands.entity(bl_entity).despawn();
                 despawned_entities.insert(bl_entity);
 
                 commands.spawn().insert(ExplosionToSpawn(en_trans.translation.clone()));
+            }
+        }
+    }
+}
+
+fn enemy_laser_hit_player_system(
+    mut commands: Commands,
+    mut player_state: ResMut<PlayerState>,
+    time: Res<Time>,
+    laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Bullet>, With<FromEnemy>)>,
+    player_query: Query<(Entity, &Transform, &SpriteSize), With<Player>>
+) {
+    if let Ok((pl_entity, pl_trans, pl_size)) = player_query.get_single() {
+        let pl_scale = Vec2::from(pl_trans.scale.xy());
+        for (bl_entity, bl_trans, bl_size) in laser_query.iter() {
+            let bl_scale = Vec2::from(bl_trans.scale.xy());
+
+            let collision = collide(
+                bl_trans.translation,
+                bl_size.0 * bl_scale,
+                pl_trans.translation,
+                pl_size.0 * pl_scale,
+            );
+
+            if let Some(_) = collision {
+                commands.entity(pl_entity).despawn();
+                player_state.shot(time.seconds_since_startup());
+
+                commands.entity(bl_entity).despawn();
+                commands.spawn().insert(ExplosionToSpawn(pl_trans.translation.clone()));
             }
         }
     }

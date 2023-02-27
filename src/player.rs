@@ -1,7 +1,7 @@
 use crate::{
     resources::{
         GameTextures,
-        WinSize,
+        WinSize, PlayerState,
     },
     constants::{
         PLAYER_SPRITE_SIZE,
@@ -10,7 +10,7 @@ use crate::{
         PLAYER_BASE_SPEED,
         BULLET_BASE_SPEED,
         LASER_SPRITE_SCALE,
-        LASER_SPRITE_SIZE
+        LASER_SPRITE_SIZE, PLAYER_RESPAWN_DELAY
     },
     components::{
         Player,
@@ -20,15 +20,17 @@ use crate::{
         SpriteSize,
     }
 };
-use bevy::prelude::*;
+use bevy::{prelude::*, core::FixedTimestep};
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system_to_stage(
-                StartupStage::PostStartup,
-                player_spawn_system
+            .insert_resource(PlayerState::default())
+            .add_system_set(
+                SystemSet::new()
+                    .with_run_criteria(FixedTimestep::step(0.5))
+                    .with_system(player_spawn_system)
             )
             .add_system(player_movement_system)
             .add_system(bullet_movement_system)
@@ -39,32 +41,43 @@ impl Plugin for PlayerPlugin {
 
 fn player_spawn_system(
     mut commands: Commands,
+    mut player_state: ResMut<PlayerState>,
+    time: Res<Time>,
     game_textures: Res<GameTextures>,
     wsize: Res<WinSize>
 ) {
-    let bottom = -wsize.h / 2.;
+    let now = time.seconds_since_startup();
+    let last_shot = player_state.last_shot;
 
-    commands
-        .spawn_bundle(SpriteBundle {
-            texture: game_textures.player.clone(),
-            transform: Transform {
-                translation: Vec3::new(
-                    0.,
-                    bottom + PLAYER_SPRITE_SIZE.1 / 2. * PLAYER_SPRITE_SCALE + 5.,
-                    10.
-                ),
-                scale: Vec3::new(
-                    PLAYER_SPRITE_SCALE,
-                    PLAYER_SPRITE_SCALE,
-                    1.
-                ),
+    if !player_state.alive
+    && (last_shot == -1. 
+     || now > last_shot + PLAYER_RESPAWN_DELAY) {
+        let bottom = -wsize.h / 2.;
+
+        commands
+            .spawn_bundle(SpriteBundle {
+                texture: game_textures.player.clone(),
+                transform: Transform {
+                    translation: Vec3::new(
+                        0.,
+                        bottom + PLAYER_SPRITE_SIZE.1 / 2. * PLAYER_SPRITE_SCALE + 5.,
+                        10.
+                    ),
+                    scale: Vec3::new(
+                        PLAYER_SPRITE_SCALE,
+                        PLAYER_SPRITE_SCALE,
+                        1.
+                    ),
+                    ..default()
+                },
                 ..default()
-            },
-            ..default()
-        })
-        .insert(Player)
-        .insert(SpriteSize::from(PLAYER_SPRITE_SIZE))
-        .insert(Velocity {x: 0., y: 0.});
+            })
+            .insert(Player)
+            .insert(SpriteSize::from(PLAYER_SPRITE_SIZE))
+            .insert(Velocity {x: 0., y: 0.});
+
+        player_state.spawned();
+    }
 }
 
 fn player_keyboard_event_system(
