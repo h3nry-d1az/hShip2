@@ -12,7 +12,8 @@ pub const ENEMY1_SPRITE_PATH: &str = "images/img_enemy_1.png";
 pub const ENEMY2_SPRITE_PATH: &str = "images/img_enemy_2.png";
 pub const ENEMY_SPRITE_SIZE: (f32, f32) = (168., 168.);
 pub const ENEMY_SPRITE_SCALE: f32 = 0.4;
-pub const MAX_ENEMIES_ON_STAGE: u32 = 7;
+pub const MAX_ENEMIES_ON_STAGE: u32 = 8;
+pub const MAX_ENEMIES_IN_FORMATION: u32 = 4;
 
 pub const EXPLOSION_SPRITESHEET_PATH: &str = "images/img_explosion.png";
 pub const EXPLOSION_SPRITESHEET_SCALE: f32 = 0.4;

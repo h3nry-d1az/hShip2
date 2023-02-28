@@ -8,11 +8,15 @@ use crate::{
         ENEMY_SPRITE_SCALE,
         ENEMY_SPRITE_SIZE,
         MAX_ENEMIES_ON_STAGE,
-        LASER_SPRITE_SCALE, LASER_SPRITE_SIZE, FPS_TARGET, ENEMY_BASE_SPEED
+        LASER_SPRITE_SCALE,
+        LASER_SPRITE_SIZE,
+        FPS_TARGET
     },
     resources::{WinSize, EnemyCount},
     components::{Enemy, SpriteSize, Velocity, Bullet, FromEnemy}
 };
+
+use self::formation::{FormationMaker, Formation};
 
 mod formation;
 
@@ -20,6 +24,7 @@ pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app
+            .insert_resource(FormationMaker::default())
             .add_system_set(
                 SystemSet::new()
                     .with_run_criteria(FixedTimestep::step(1.))
@@ -38,15 +43,15 @@ fn enemy_spawn_system(
     mut commands: Commands,
     game_textures: Res<GameTextures>,
     mut enemy_count: ResMut<EnemyCount>,
+    mut formation_maker: ResMut<FormationMaker>,
     wsize: Res<WinSize>
 ) {
     if enemy_count.0 < MAX_ENEMIES_ON_STAGE {
         let mut rng = rand::thread_rng();
-        let w_span = wsize.w / 2. - 100.;
-        let h_span = wsize.h / 2. - 100.;
-        let x = rng.gen_range(-w_span..w_span);
-        let y = rng.gen_range((-h_span+200.)..h_span);
         let enemy_type = rng.gen_bool(0.5);
+
+        let formation = formation_maker.make(&wsize);
+        let (x, y) = formation.start;
 
         if enemy_type {
             commands
@@ -64,6 +69,7 @@ fn enemy_spawn_system(
                     ..default()
                 })
                 .insert(Enemy)
+                .insert(formation)
                 .insert(SpriteSize::from(ENEMY_SPRITE_SIZE));
         } else {
             commands
@@ -81,6 +87,7 @@ fn enemy_spawn_system(
                     ..default()
                 })
                 .insert(Enemy)
+                .insert(formation)
                 .insert(SpriteSize::from(ENEMY_SPRITE_SIZE));
         }
 
@@ -126,20 +133,17 @@ fn enemy_fire_system(
 }
 
 fn enemy_movement_system(
-    time: Res<Time>,
-    mut query: Query<&mut Transform, With<Enemy>>
+    mut query: Query<(&mut Transform, &mut Formation), With<Enemy>>
 ) {
-    let now = time.seconds_since_startup() as f32;
-
-    for mut transf in query.iter_mut() {
+    for (mut transf, mut formation) in query.iter_mut() {
         let (x, y) = (transf.translation.x, transf.translation.y);
-        let max_distance = FPS_TARGET * ENEMY_BASE_SPEED;
+        let max_distance = FPS_TARGET * formation.speed;
 
-        let dir = -1.;
-        let (x_pivot, y_pivot) = (0., 0.);
-        let (x_radius, y_radius) = (200., 130.);
+        let dir = if formation.start.0 < 0. { 1. } else { -1. };
+        let (x_pivot, y_pivot) = formation.pivot;
+        let (x_radius, y_radius) = formation.radius;
 
-        let angle = dir * ENEMY_BASE_SPEED * FPS_TARGET * now % 360. / PI;
+        let angle = formation.angle + dir * formation.speed * FPS_TARGET / (x_radius.min(y_radius) * PI / 2.);
 
         let x_dest = x_radius * angle.cos() + x_pivot;
         let y_dest = y_radius * angle.sin() + y_pivot;
@@ -154,6 +158,10 @@ fn enemy_movement_system(
         let x_fin = if dx > 0. { x_fin.max(x_dest) } else { x_fin.min(x_dest) };
         let y_fin = y - dy * distance_ratio;
         let y_fin = if dy > 0. { y_fin.max(y_dest) } else { y_fin.min(y_dest) };
+
+        if distance < max_distance * formation.speed / 20. {
+            formation.angle = angle;
+        }
 
         let transl = &mut transf.translation;
         (transl.x, transl.y) = (x_fin, y_fin);
