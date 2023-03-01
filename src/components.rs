@@ -28,6 +28,8 @@ pub struct FromEnemy;
 pub struct Bullet;
 #[derive(Component)]
 pub struct Background;
+#[derive(Component)]
+pub struct Story;
 
 #[derive(Component)]
 pub struct Explosion;

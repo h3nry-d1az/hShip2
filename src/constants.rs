@@ -2,6 +2,7 @@ pub const PLAYER_SPRITE_PATH: &str = "images/img_player.png";
 pub const PLAYER_SPRITE_SIZE: (f32, f32) = (200., 240.);
 pub const PLAYER_SPRITE_SCALE: f32 = 0.4;
 pub const PLAYER_RESPAWN_DELAY: f64 = 2.;
+pub const PLAYER_SHOOT_COOLDOWN: f64 = 0.175;
 
 pub const PLAYER_LASER_SPRITE_PATH: &str = "images/img_player_laser.png";
 pub const ENEMY_LASER_SPRITE_PATH: &str = "images/img_enemy_laser.png";
@@ -23,8 +24,13 @@ pub const BACKGROUND_SPRITE_PATH: &str = "images/img_background.png";
 pub const BACKGROUND_SPRITE_SIZE: (f32, f32) = (862., 352.);
 pub const BACKGROUND_SPRITE_SCALE: f32 = 2.;
 
+pub const STORY_SPRITE_PATH: &str = "images/img_story.png";
+pub const STORY_SPRITE_SIZE: (f32, f32) = (433., 576.);
+pub const STORY_SPRITE_SCALE: f32 = 2.;
+
 pub const FPS_TARGET: f32 = 1./60.;
 pub const PLAYER_BASE_SPEED: f32 = 500.;
 pub const ENEMY_BASE_SPEED: f32 = 350.;
 pub const BULLET_BASE_SPEED: f32 = 500.;
 pub const BACKGROUND_BASE_SPEED: f32 = 2.;
+pub const STORY_BASE_SPEED: f32 = 0.85;

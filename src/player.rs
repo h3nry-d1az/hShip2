@@ -1,7 +1,7 @@
 use crate::{
     resources::{
         GameTextures,
-        WinSize, PlayerState,
+        WinSize, PlayerState, GameReady,
     },
     constants::{
         PLAYER_SPRITE_SIZE,
@@ -10,7 +10,7 @@ use crate::{
         PLAYER_BASE_SPEED,
         BULLET_BASE_SPEED,
         LASER_SPRITE_SCALE,
-        LASER_SPRITE_SIZE, PLAYER_RESPAWN_DELAY
+        LASER_SPRITE_SIZE, PLAYER_RESPAWN_DELAY, PLAYER_SHOOT_COOLDOWN
     },
     components::{
         Player,
@@ -42,6 +42,7 @@ impl Plugin for PlayerPlugin {
 fn player_spawn_system(
     mut commands: Commands,
     mut player_state: ResMut<PlayerState>,
+    game_ready: Res<GameReady>,
     time: Res<Time>,
     game_textures: Res<GameTextures>,
     wsize: Res<WinSize>
@@ -51,7 +52,8 @@ fn player_spawn_system(
 
     if !player_state.alive
     && (last_shot == -1. 
-     || now > last_shot + PLAYER_RESPAWN_DELAY) {
+     || now > last_shot + PLAYER_RESPAWN_DELAY)
+    && game_ready.0 {
         let bottom = -wsize.h / 2.;
 
         commands
@@ -109,12 +111,17 @@ fn player_keyboard_event_system(
 
 fn player_fire_system(
     mut commands: Commands,
+    mut player_state: ResMut<PlayerState>,
+    time: Res<Time>,
     kb: Res<Input<KeyCode>>,
     game_textures: Res<GameTextures>,
     query: Query<&Transform, With<Player>>
 ) {
+    let now = time.seconds_since_startup();
     if let Ok(trans) = query.get_single() {
-        if kb.just_pressed(KeyCode::Space) {
+        if kb.just_pressed(KeyCode::Space) 
+        && (player_state.last_shoot == -1. 
+            || now > player_state.last_shoot + PLAYER_SHOOT_COOLDOWN) {
             let (x, y) = (trans.translation.x, trans.translation.y);
             commands
                 .spawn_bundle(SpriteBundle {
@@ -134,6 +141,7 @@ fn player_fire_system(
                 .insert(Bullet)
                 .insert(FromPlayer)
                 .insert(SpriteSize::from(LASER_SPRITE_SIZE));
+            player_state.shoot(now);
         }
     }
 }

@@ -2,6 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::{prelude::*, core::FixedTimestep, ecs::schedule::ShouldRun};
 use rand::Rng;
+use rand::seq::SliceRandom;
 use crate::{
     GameTextures,
     constants::{
@@ -12,7 +13,7 @@ use crate::{
         LASER_SPRITE_SIZE,
         FPS_TARGET
     },
-    resources::{WinSize, EnemyCount},
+    resources::{WinSize, EnemyCount, GameReady},
     components::{Enemy, SpriteSize, Velocity, Bullet, FromEnemy}
 };
 
@@ -42,11 +43,13 @@ impl Plugin for EnemyPlugin {
 fn enemy_spawn_system(
     mut commands: Commands,
     game_textures: Res<GameTextures>,
+    game_ready: Res<GameReady>,
     mut enemy_count: ResMut<EnemyCount>,
     mut formation_maker: ResMut<FormationMaker>,
     wsize: Res<WinSize>
 ) {
-    if enemy_count.0 < MAX_ENEMIES_ON_STAGE {
+    if enemy_count.0 < MAX_ENEMIES_ON_STAGE
+    && game_ready.0 {
         let mut rng = rand::thread_rng();
         let enemy_type = rng.gen_bool(0.5);
 
@@ -96,7 +99,7 @@ fn enemy_spawn_system(
 }
 
 fn enemy_fire_criteria() -> ShouldRun {
-    if rand::thread_rng().gen_bool(FPS_TARGET as f64) {
+    if rand::thread_rng().gen_bool((FPS_TARGET * 2.) as f64) {
         ShouldRun::Yes
     } else {
         ShouldRun::No
@@ -108,28 +111,37 @@ fn enemy_fire_system(
     game_textures: Res<GameTextures>,
     query: Query<&Transform, With<Enemy>>
 ) {
-    for &trans in query.iter() {
-        let (x, y) = (trans.translation.x, trans.translation.y);
-        commands
-                .spawn_bundle(SpriteBundle {
-                    texture: game_textures.enemy_laser.clone(),
-                    transform: Transform {
-                        translation: Vec3::new(x, y - 25., 1.),
-                        rotation: Quat::from_rotation_x(PI),
-                        scale: Vec3::new(
-                            LASER_SPRITE_SCALE,
-                            LASER_SPRITE_SCALE + 0.1,
-                            1.
-                        ),
+    let transform_vec = query
+        .iter()
+        .collect::<Vec<&Transform>>();
+    let transform = transform_vec.choose(&mut rand::thread_rng());
+
+    match transform {
+        Some(trans) => {
+            let (x, y) = (trans.translation.x, trans.translation.y);
+            commands
+                    .spawn_bundle(SpriteBundle {
+                        texture: game_textures.enemy_laser.clone(),
+                        transform: Transform {
+                            translation: Vec3::new(x, y - 25., 1.),
+                            rotation: Quat::from_rotation_x(PI),
+                            scale: Vec3::new(
+                                LASER_SPRITE_SCALE,
+                                LASER_SPRITE_SCALE + 0.1,
+                                1.
+                            ),
+                            ..default()
+                        },
                         ..default()
-                    },
-                    ..default()
-                })
-                .insert(Velocity {x: 0., y: -1.})
-                .insert(Bullet)
-                .insert(FromEnemy)
-                .insert(SpriteSize::from(LASER_SPRITE_SIZE));
+                    })
+                    .insert(Velocity {x: 0., y: -1.})
+                    .insert(Bullet)
+                    .insert(FromEnemy)
+                    .insert(SpriteSize::from(LASER_SPRITE_SIZE));
+        },
+        None => {}
     }
+
 }
 
 fn enemy_movement_system(

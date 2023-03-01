@@ -17,6 +17,7 @@ mod constants;
 mod components;
 mod resources;
 mod background;
+mod story;
 mod explosion;
 
 use constants::*;
@@ -35,12 +36,14 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .add_plugin(background::BackgroundPlugin)
+        .add_plugin(story::StoryPlugin)
         .add_plugin(player::PlayerPlugin)
         .add_plugin(enemy::EnemyPlugin)
         .add_plugin(explosion::ExplosionPlugin)
         .add_startup_system(setup_system)
         .add_system(player_laser_hit_enemy_system)
         .add_system(enemy_laser_hit_player_system)
+        // .add_system(toggle_game_ready)  // only for debugging
         .run();
 }
 
@@ -78,16 +81,39 @@ fn setup_system(
     );
     let explosion = texture_atlasses.add(texture_atlass);
 
-    commands.insert_resource(GameTextures {
+    let game_textures = GameTextures {
         player: asset_server.load(PLAYER_SPRITE_PATH),
         player_laser: asset_server.load(PLAYER_LASER_SPRITE_PATH),
         enemy1: asset_server.load(ENEMY1_SPRITE_PATH),
         enemy2: asset_server.load(ENEMY2_SPRITE_PATH),
         enemy_laser: asset_server.load(ENEMY_LASER_SPRITE_PATH),
         background: asset_server.load(BACKGROUND_SPRITE_PATH),
+        story: asset_server.load(STORY_SPRITE_PATH),
         explosion
-    });
+    };
+
+    commands.spawn_bundle(SpriteBundle {
+        texture: game_textures.story.clone(),
+        transform: Transform {
+            translation: Vec3::new(
+                0.,
+                -(768./2. + (STORY_SPRITE_SIZE.1 * STORY_SPRITE_SCALE)/2.),
+                1.
+            ),
+            scale: Vec3::new(
+                STORY_SPRITE_SCALE,
+                STORY_SPRITE_SCALE,
+                1.
+            ),
+            ..default()
+        },
+        ..default()
+    })
+    .insert(Story);
+
+    commands.insert_resource(game_textures);
     commands.insert_resource(EnemyCount(0));
+    commands.insert_resource(GameReady(false));
 }
 
 fn player_laser_hit_enemy_system(
@@ -153,5 +179,18 @@ fn enemy_laser_hit_player_system(
                 commands.spawn().insert(ExplosionToSpawn(pl_trans.translation.clone()));
             }
         }
+    }
+}
+
+#[allow(dead_code)]
+fn toggle_game_ready(
+    mut game_ready: ResMut<GameReady>,
+    kb: Res<Input<KeyCode>>
+) {
+    if kb.pressed(KeyCode::Q) {
+        game_ready.0 = match game_ready.0 {
+            true => false,
+            false => true
+        };
     }
 }
