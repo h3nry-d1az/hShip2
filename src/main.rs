@@ -57,7 +57,8 @@ fn setup_system(
     asset_server: Res<AssetServer>,
     mut texture_atlasses: ResMut<Assets<TextureAtlas>>,
     mut windows: ResMut<Windows>,
-    winit_windows: NonSend<WinitWindows>
+    winit_windows: NonSend<WinitWindows>,
+    audio: Res<Audio>
 ) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
@@ -86,6 +87,7 @@ fn setup_system(
         1
     );
     let explosion = texture_atlasses.add(texture_atlass);
+    let introduction = asset_server.load(MAIN_THEME_SONG_PATH);
 
     let game_textures = GameTextures {
         player: asset_server.load(PLAYER_SPRITE_PATH),
@@ -97,7 +99,10 @@ fn setup_system(
         story: asset_server.load(STORY_SPRITE_PATH),
         game_over: asset_server.load(GAME_OVER_SPRITE_PATH),
         explosion,
-        cascadia_code: asset_server.load(GAME_FONT_TTF_PATH)
+        cascadia_code: asset_server.load(GAME_FONT_TTF_PATH),
+        main_theme: introduction.clone(),
+        sfx_explosion: asset_server.load(SFX_EXPLOSION_PATH),
+        sfx_shoot: asset_server.load(SFX_SHOOT_PATH),
     };
 
     commands.spawn_bundle(SpriteBundle {
@@ -123,12 +128,19 @@ fn setup_system(
     commands.insert_resource(EnemyCount(0));
     commands.insert_resource(GameReady(false));
     commands.insert_resource(SpawnedText(false));
+
+    audio.play_with_settings(
+        introduction,
+        PlaybackSettings::LOOP
+    );
 }
 
 fn player_laser_hit_enemy_system(
     mut commands: Commands,
     mut enemy_count: ResMut<EnemyCount>,
     mut player_state: ResMut<PlayerState>,
+    audio: Res<Audio>,
+    game_textures: Res<GameTextures>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Bullet>, With<FromPlayer>)>,
     enemy_query: Query<(Entity, &Transform, &SpriteSize), With<Enemy>>
 ) {
@@ -164,6 +176,7 @@ fn player_laser_hit_enemy_system(
                 despawned_entities.insert(bl_entity);
 
                 commands.spawn().insert(ExplosionToSpawn(en_trans.translation.clone()));
+                audio.play(game_textures.sfx_explosion.clone());
             }
         }
     }
@@ -175,6 +188,7 @@ fn enemy_laser_hit_player_system(
     mut game_ready: ResMut<GameReady>,
     game_textures: Res<GameTextures>,
     time: Res<Time>,
+    audio: Res<Audio>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Bullet>, With<FromEnemy>)>,
     player_query: Query<(Entity, &Transform, &SpriteSize), With<Player>>
 ) {
@@ -196,6 +210,8 @@ fn enemy_laser_hit_player_system(
 
                 commands.entity(bl_entity).despawn();
                 commands.spawn().insert(ExplosionToSpawn(pl_trans.translation.clone()));
+
+                audio.play(game_textures.sfx_explosion.clone());
 
                 if player_state.lives == 0 {
                     game_ready.0 = false;

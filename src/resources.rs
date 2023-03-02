@@ -15,7 +15,10 @@ pub struct GameTextures {
     pub story: Handle<Image>,
     pub game_over: Handle<Image>,
     pub explosion: Handle<TextureAtlas>,
-    pub cascadia_code: Handle<Font>
+    pub cascadia_code: Handle<Font>,
+    pub main_theme: Handle<AudioSource>,
+    pub sfx_explosion: Handle<AudioSource>,
+    pub sfx_shoot: Handle<AudioSource>,
 }
 
 pub struct EnemyCount(pub u32);

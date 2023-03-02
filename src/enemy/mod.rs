@@ -108,6 +108,7 @@ fn enemy_fire_criteria() -> ShouldRun {
 
 fn enemy_fire_system(
     mut commands: Commands,
+    audio: Res<Audio>,
     game_textures: Res<GameTextures>,
     query: Query<&Transform, With<Enemy>>
 ) {
@@ -138,6 +139,7 @@ fn enemy_fire_system(
                     .insert(Bullet)
                     .insert(FromEnemy)
                     .insert(SpriteSize::from(LASER_SPRITE_SIZE));
+            audio.play(game_textures.sfx_shoot.clone());
         },
         None => {}
     }

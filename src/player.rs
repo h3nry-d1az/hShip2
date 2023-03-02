@@ -113,6 +113,7 @@ fn player_fire_system(
     mut commands: Commands,
     mut player_state: ResMut<PlayerState>,
     time: Res<Time>,
+    audio: Res<Audio>,
     kb: Res<Input<KeyCode>>,
     game_textures: Res<GameTextures>,
     query: Query<&Transform, With<Player>>
@@ -142,6 +143,7 @@ fn player_fire_system(
                 .insert(FromPlayer)
                 .insert(SpriteSize::from(LASER_SPRITE_SIZE));
             player_state.shoot(now);
+            audio.play(game_textures.sfx_shoot.clone());
         }
     }
 }

@@ -36,6 +36,11 @@ pub const GAME_OVER_SPRITE_SCALE: f32 = 1.;
 pub const GAME_FONT_TTF_PATH: &str = "fonts/CascadiaCode.ttf";
 pub const GAME_FONT_SIZE: f32 = 60.;
 
+pub const MAIN_THEME_SONG_PATH: &str = "music/main_theme.wav";
+
+pub const SFX_EXPLOSION_PATH: &str = "sound_effects/sfx_explosion.wav";
+pub const SFX_SHOOT_PATH: &str = "sound_effects/sfx_shoot.wav";
+
 pub const FPS_TARGET: f32 = 1./60.;
 pub const PLAYER_BASE_SPEED: f32 = 500.;
 pub const ENEMY_BASE_SPEED: f32 = 350.;

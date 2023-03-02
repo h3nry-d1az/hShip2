@@ -1,6 +1,15 @@
 use bevy::prelude::*;
 
-use crate::{resources::{SpawnedText, GameReady, GameTextures, PlayerState}, constants::GAME_FONT_SIZE, components::{LivesText, ScoreText}};
+use crate::{
+    resources::{
+        SpawnedText,
+        GameReady,
+        GameTextures,
+        PlayerState
+    },
+    constants::GAME_FONT_SIZE,
+    components::{LivesText, ScoreText}
+};
 
 pub struct UiPlugin;
 impl Plugin for UiPlugin {
