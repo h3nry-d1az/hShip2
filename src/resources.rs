@@ -13,6 +13,7 @@ pub struct GameTextures {
     pub enemy_laser: Handle<Image>,
     pub background: Handle<Image>,
     pub story: Handle<Image>,
+    pub game_over: Handle<Image>,
     pub explosion: Handle<TextureAtlas>
 }
 
@@ -21,12 +22,20 @@ pub struct GameReady(pub bool);
 
 pub struct PlayerState {
     pub alive: bool,
+    pub lives: u32,
+    pub score: u32,
     pub last_shot: f64,
     pub last_shoot: f64
 }
 impl Default for PlayerState {
     fn default() -> Self {
-        Self { alive: false, last_shot: -1., last_shoot: -1. }
+        Self {
+            alive: false,
+            lives: 4,
+            score: 0,
+            last_shot: -1.,
+            last_shoot: -1.
+        }
     }
 }
 impl PlayerState {
@@ -35,6 +44,7 @@ impl PlayerState {
         time: f64
     ) {
         self.alive = false;
+        self.lives -= 1;
         self.last_shot = time;
     }
 

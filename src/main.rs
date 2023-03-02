@@ -8,6 +8,7 @@ use bevy::window::{
     WindowMode,
     WindowId
 };
+use bevy::app::AppExit;
 use bevy::winit::WinitWindows;
 use winit::window::Icon;
 
@@ -43,7 +44,8 @@ fn main() {
         .add_startup_system(setup_system)
         .add_system(player_laser_hit_enemy_system)
         .add_system(enemy_laser_hit_player_system)
-        // .add_system(toggle_game_ready)  // only for debugging
+        .add_system(close_on_esc_system)
+        // .add_system(toggle_game_ready_system)  // only for debugging
         .run();
 }
 
@@ -89,6 +91,7 @@ fn setup_system(
         enemy_laser: asset_server.load(ENEMY_LASER_SPRITE_PATH),
         background: asset_server.load(BACKGROUND_SPRITE_PATH),
         story: asset_server.load(STORY_SPRITE_PATH),
+        game_over: asset_server.load(GAME_OVER_SPRITE_PATH),
         explosion
     };
 
@@ -119,6 +122,7 @@ fn setup_system(
 fn player_laser_hit_enemy_system(
     mut commands: Commands,
     mut enemy_count: ResMut<EnemyCount>,
+    mut player_state: ResMut<PlayerState>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Bullet>, With<FromPlayer>)>,
     enemy_query: Query<(Entity, &Transform, &SpriteSize), With<Enemy>>
 ) {
@@ -142,6 +146,7 @@ fn player_laser_hit_enemy_system(
                 commands.entity(en_entity).despawn();
                 despawned_entities.insert(en_entity);
                 enemy_count.0 -= 1;
+                player_state.score += SCORE_PER_ENEMY;
 
                 commands.entity(bl_entity).despawn();
                 despawned_entities.insert(bl_entity);
@@ -155,6 +160,8 @@ fn player_laser_hit_enemy_system(
 fn enemy_laser_hit_player_system(
     mut commands: Commands,
     mut player_state: ResMut<PlayerState>,
+    mut game_ready: ResMut<GameReady>,
+    game_textures: Res<GameTextures>,
     time: Res<Time>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Bullet>, With<FromEnemy>)>,
     player_query: Query<(Entity, &Transform, &SpriteSize), With<Player>>
@@ -177,13 +184,35 @@ fn enemy_laser_hit_player_system(
 
                 commands.entity(bl_entity).despawn();
                 commands.spawn().insert(ExplosionToSpawn(pl_trans.translation.clone()));
+
+                if player_state.lives == 0 {
+                    game_ready.0 = false;
+
+                    commands.spawn_bundle(SpriteBundle {
+                        texture: game_textures.game_over.clone(),
+                        transform: Transform {
+                            translation: Vec3::new(
+                                0.,
+                                0.,
+                                1.
+                            ),
+                            scale: Vec3::new(
+                                GAME_OVER_SPRITE_SCALE,
+                                GAME_OVER_SPRITE_SCALE,
+                                1.
+                            ),
+                            ..default()
+                        },
+                        ..default()
+                    });
+                }
             }
         }
     }
 }
 
 #[allow(dead_code)]
-fn toggle_game_ready(
+fn toggle_game_ready_system(
     mut game_ready: ResMut<GameReady>,
     kb: Res<Input<KeyCode>>
 ) {
@@ -192,5 +221,16 @@ fn toggle_game_ready(
             true => false,
             false => true
         };
+    }
+}
+
+fn close_on_esc_system(
+    game_ready: Res<GameReady>,
+    kb: Res<Input<KeyCode>>,
+    mut exit: EventWriter<AppExit>
+) {
+    if kb.pressed(KeyCode::Escape)
+    && !game_ready.0 {
+        exit.send(AppExit);       
     }
 }
