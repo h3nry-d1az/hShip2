@@ -16,6 +16,7 @@ pub const ENEMY_SPRITE_SCALE: f32 = 0.4;
 pub const MAX_ENEMIES_ON_STAGE: u32 = 8;
 pub const MAX_ENEMIES_IN_FORMATION: u32 = 4;
 pub const SCORE_PER_ENEMY: u32 = 100;
+pub const SCORE_TO_GET_ONEUP: u32 = 2000;
 
 pub const EXPLOSION_SPRITESHEET_PATH: &str = "images/img_explosion.png";
 pub const EXPLOSION_SPRITESHEET_SCALE: f32 = 0.4;
@@ -31,6 +32,9 @@ pub const STORY_SPRITE_SCALE: f32 = 2.;
 
 pub const GAME_OVER_SPRITE_PATH: &str = "images/img_game_over.png";
 pub const GAME_OVER_SPRITE_SCALE: f32 = 1.;
+
+pub const GAME_FONT_TTF_PATH: &str = "fonts/CascadiaCode.ttf";
+pub const GAME_FONT_SIZE: f32 = 60.;
 
 pub const FPS_TARGET: f32 = 1./60.;
 pub const PLAYER_BASE_SPEED: f32 = 500.;

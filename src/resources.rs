@@ -14,11 +14,13 @@ pub struct GameTextures {
     pub background: Handle<Image>,
     pub story: Handle<Image>,
     pub game_over: Handle<Image>,
-    pub explosion: Handle<TextureAtlas>
+    pub explosion: Handle<TextureAtlas>,
+    pub cascadia_code: Handle<Font>
 }
 
 pub struct EnemyCount(pub u32);
 pub struct GameReady(pub bool);
+pub struct SpawnedText(pub bool);
 
 pub struct PlayerState {
     pub alive: bool,

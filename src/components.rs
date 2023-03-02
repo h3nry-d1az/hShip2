@@ -32,6 +32,11 @@ pub struct Background;
 pub struct Story;
 
 #[derive(Component)]
+pub struct LivesText;
+#[derive(Component)]
+pub struct ScoreText;
+
+#[derive(Component)]
 pub struct Explosion;
 #[derive(Component)]
 pub struct ExplosionToSpawn(pub Vec3);

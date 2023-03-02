@@ -20,6 +20,7 @@ mod resources;
 mod background;
 mod story;
 mod explosion;
+mod ui;
 
 use constants::*;
 use resources::*;
@@ -41,11 +42,13 @@ fn main() {
         .add_plugin(player::PlayerPlugin)
         .add_plugin(enemy::EnemyPlugin)
         .add_plugin(explosion::ExplosionPlugin)
+        .add_plugin(ui::UiPlugin)
         .add_startup_system(setup_system)
         .add_system(player_laser_hit_enemy_system)
         .add_system(enemy_laser_hit_player_system)
         .add_system(close_on_esc_system)
         // .add_system(toggle_game_ready_system)  // only for debugging
+        // .add_system(get_oneup_system)          // only for debugging
         .run();
 }
 
@@ -57,6 +60,7 @@ fn setup_system(
     winit_windows: NonSend<WinitWindows>
 ) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(UiCameraBundle::default());
 
     let window = windows.get_primary_mut().unwrap();
     window.set_cursor_visibility(false);
@@ -92,7 +96,8 @@ fn setup_system(
         background: asset_server.load(BACKGROUND_SPRITE_PATH),
         story: asset_server.load(STORY_SPRITE_PATH),
         game_over: asset_server.load(GAME_OVER_SPRITE_PATH),
-        explosion
+        explosion,
+        cascadia_code: asset_server.load(GAME_FONT_TTF_PATH)
     };
 
     commands.spawn_bundle(SpriteBundle {
@@ -117,6 +122,7 @@ fn setup_system(
     commands.insert_resource(game_textures);
     commands.insert_resource(EnemyCount(0));
     commands.insert_resource(GameReady(false));
+    commands.insert_resource(SpawnedText(false));
 }
 
 fn player_laser_hit_enemy_system(
@@ -147,6 +153,12 @@ fn player_laser_hit_enemy_system(
                 despawned_entities.insert(en_entity);
                 enemy_count.0 -= 1;
                 player_state.score += SCORE_PER_ENEMY;
+
+                if (player_state.score % SCORE_TO_GET_ONEUP == 0)
+                && player_state.score != 0 {
+                    player_state.lives += 1;
+                    player_state.score += SCORE_PER_ENEMY;
+                }
 
                 commands.entity(bl_entity).despawn();
                 despawned_entities.insert(bl_entity);
@@ -221,6 +233,23 @@ fn toggle_game_ready_system(
             true => false,
             false => true
         };
+    }
+}
+
+#[allow(dead_code)]
+fn get_oneup_system(
+    mut player_state: ResMut<PlayerState>,
+    game_ready: Res<GameReady>,
+    kb: Res<Input<KeyCode>>
+) {
+    if kb.pressed(KeyCode::E)
+    && game_ready.0 {
+        player_state.score += SCORE_PER_ENEMY;
+        if (player_state.score % SCORE_TO_GET_ONEUP == 0)
+        && player_state.score != 0 {
+            player_state.lives += 1;
+            player_state.score += SCORE_PER_ENEMY;
+        }
     }
 }
 
